@@ -1,0 +1,21 @@
+{%extends "base.html"%}
+
+{%block content%}
+    {{error}}
+    {%for i in post%}
+    <a href="{{ i.key().id() }}">
+        <div class="loop">
+        
+        <h1> {{i.title}}</h1>
+        </a>
+        <p align="right"> {{i.create}}</p>
+        <pre> {{i.art}}</pre>
+        <br><br><br>
+        
+        </div>
+        
+    {%endfor%}
+    <br><br>
+
+
+{%endblock%}

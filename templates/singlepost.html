@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <form method ="post">
+     <h2>Title</h2>
+     {{post.title}}
+     <br><br>
+     <h2>Art</h2>
+     <pre>{{post.art}}</pre>
+     <hr>
+     <input type="submit" name="like" value="Like">{{countLikes}}
+     <input type="submit" name="unlike" value="Unlike">{{countUnlikes}}
+     <input type="submit" name="edit" value = "Edit">
+    <input type="submit" name="delete" value="Delete">
+    <br>
+    {{error}}
+    <h2>Comments:</h2>
+    <br>
+    <textarea name = "commentbox" ></textarea>
+    <br>
+    <input type="submit" name="comment" value="Comment">
+    </form>
+    {% for c in comment_get %}
+        <h3>{{c.uname}}</h3>
+        <br>
+        <pre>{{c.text}}</pre>
+        <br>
+        <br>
+        <button class="posting"><a href="/editc/{{c.key().id()}}">Edit Comment</a></button>
+        <button class="posting"><a href="/deletec/{{c.key().id()}}">Delete Comment</a></button>
+
+        <p>-----------------------------</p>
+
+    {% endfor %}
+
+
+
+
+
+{% endblock %}

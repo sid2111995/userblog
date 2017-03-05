@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Are you sure to delete this comment by {{comment.uname}}</h1>
+    <form method = "post">
+        <input type="submit" name="Edit Comment">
+    </form>
+
+{% endblock %}
