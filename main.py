@@ -328,9 +328,11 @@ class latest(Base):
     def post(self, id):
 
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
         key = db.Key.from_path('Post', int(id))
         post = db.get(key)
+        if not post:
+            return self.redirect('/login')
         countLikes = Like.countLike(str(post.key().id()))
         countUnlikes = Unlike.countLike(str(post.key().id()))
 
@@ -485,6 +487,8 @@ class Edit_comment(Base):
 
         ckey = db.Key.from_path('Comment', int(id))
         comment = db.get(ckey)
+        if not comment:
+            return self.redirect('/login')
         newcomment = self.request.get('edcom')
         if self.user and comment.uid == str(self.user.key().id()):
             comment.text = newcomment
@@ -526,6 +530,8 @@ class Delete_comment(Base):
 
         ckey = db.Key.from_path('Comment', int(id))
         comment = db.get(ckey)
+        if not comment:
+            return self.redirect('/login')
         newcomment = self.request.get('edcom')
         if self.user and comment.uid == str(self.user.key().id()):
             comment.delete()
@@ -548,6 +554,8 @@ class Edit(Base):
     def post(self, id):
         key = db.Key.from_path('Post', int(id))
         post = db.get(key)
+        if not post:
+            return self.redirect('/login')
         title = self.request.get("title")
         art = self.request.get("art")
         if self.request.get('cancel'):
