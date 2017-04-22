@@ -263,7 +263,7 @@ class Comment(db.Model):
 
     @classmethod
     def com(cls, pid):
-        c = Comment.all().filter("pid=", pid)
+        c = Comment.all().filter("pid = ", pid)
         return c
 
 
@@ -286,6 +286,8 @@ class NewPost(Base):
             self.redirect('/login')
 
     def post(self):
+        if not self.user:
+            return self.redirect('/login')
         title = self.request.get("title")
         art = self.request.get("art")
         error = ""
@@ -310,6 +312,8 @@ class latest(Base):
     def get(self, id):
         key = db.Key.from_path('Post', int(id))
         post = db.get(key)
+        if not post:
+            return self.redirect('/login')
         countLikes = Like.countLike(str(post.key().id()))
         countUnlikes = Unlike.countLike(str(post.key().id()))
         comment_get = db.GqlQuery(
@@ -546,6 +550,8 @@ class Edit(Base):
         post = db.get(key)
         title = self.request.get("title")
         art = self.request.get("art")
+        if self.request.get('cancel'):
+            return self.redirect("/%s" % post.key().id())
 
         if self.user and (
             post.user_id == str(
