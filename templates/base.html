@@ -177,13 +177,14 @@
    <li class="active"><a href="/blog">CS253 BLOG</a></li>
 
    
-
-   <li><a href="/login">Login</a></li>
-   <li><a href="/register">Register</a></li>
-   <li><a href="/newpost">Add Post</a>
-   <li><a href="/logout">Logout</a></li></li>
-
-   
+  
+{% if not user %}
+<li><a href="/login">Login{{user}}</a></li>
+<li><a href="/register">Register</a></li>
+{% else %}
+<li><a href="/newpost">Add Post</a>
+<li><a href="/logout">Logout</a></li></li>
+{% endif %}
 </ul>
 </div></div>
         </div>
