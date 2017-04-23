@@ -194,6 +194,8 @@ class Welcome(Base):
 
 class Login(Base):
     def get(self):
+        if self.user:
+            return self.redirect('/welcome')
         self.render('login-form.html')
 
     def post(self):
@@ -464,8 +466,12 @@ class Edit_comment(Base):
     def get(self, id):
         ckey = db.Key.from_path('Comment', int(id))
         comment = db.get(ckey)
+        if not comment:
+            return self.redirect('/login')
         key = db.Key.from_path('Post', int(comment.pid))
         post = db.get(key)
+        if not post:
+            return self.redirect('/login')
         countLikes = Like.countLike(str(post.key().id()))
         countUnlikes = Unlike.countLike(str(post.key().id()))
         comment_get = db.GqlQuery(
@@ -508,8 +514,12 @@ class Delete_comment(Base):
     def get(self, id):
         ckey = db.Key.from_path('Comment', int(id))
         comment = db.get(ckey)
+        if not comment:
+            return self.redirect('/login')
         key = db.Key.from_path('Post', int(comment.pid))
         post = db.get(key)
+        if not post:
+            return self.redirect('/login')
         countLikes = Like.countLike(str(post.key().id()))
         countUnlikes = Unlike.countLike(str(post.key().id()))
         comment_get = db.GqlQuery(
