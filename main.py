@@ -3,18 +3,18 @@ import re
 import random
 import hashlib
 import hmac
-from string import letters
 import time
+from string import letters
+
 import webapp2
 import jinja2
 
 from google.appengine.ext import db
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(template_dir),
-    autoescape=True)
-
+jinja_env = \
+    jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
+                       autoescape=True)
 secret = 'fart'
 
 
@@ -34,31 +34,32 @@ def check_secure_val(secure_val):
 
 
 class Base(webapp2.RequestHandler):
+
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
 
+    def render_str(self, template, **params):
+        params['user'] = self.user
+        return render_str(template, **params)
+
     def render(self, template, **kw):
-        self.response.out.write(render_str(template, **kw))
-
-    def render_str(self, template, **param):
-        param['user'] = self.username
-        return render_str(template, **param)
-
-    def set_secure_cookie(self, name, val):
-        cookie_val = make_secure_val(val)
-        self.response.headers.add_header(
-            'Set-Cookie',
-            '%s=%s; Path=/' % (name, cookie_val))
+        self.write(self.render_str(template, **kw))
 
     def read_secure_cookie(self, name):
         cookie_val = self.request.cookies.get(name)
         return cookie_val and check_secure_val(cookie_val)
 
+    def set_secure_cookie(self, name, val):
+        cookie_val = make_secure_val(val)
+        self.response.headers.add_header('Set-Cookie', '%s=%s; Path=/'
+                                         % (name, cookie_val))
+
     def login(self, user):
         self.set_secure_cookie('user_id', str(user.key().id()))
 
     def logout(self):
-        self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
+        self.response.headers.add_header('Set-Cookie',
+                                         'user_id=; Path=/')
 
     def initialize(self, *a, **kw):
         webapp2.RequestHandler.initialize(self, *a, **kw)
@@ -310,6 +311,148 @@ class NewPost(Base):
             self.redirect("/%s" % obj.key().id())
 
 
+class delLatest(Base):
+    def get(self, id):
+        key = db.Key.from_path('Post', int(id))
+        post = db.get(key)
+        if not post:
+            return self.redirect('/login')
+        countLikes = Like.countLike(str(post.key().id()))
+        countUnlikes = Unlike.countLike(str(post.key().id()))
+        comment_get = db.GqlQuery(
+            "select * from Comment where pid = '%s'" % str(post.key().id()))
+        if not self.user:
+            return self.redirect('/login')
+        key = db.Key.from_path('Post', int(id))
+        post = db.get(key)
+        if not post:
+            return self.redirect('/login')
+        countLikes = Like.countLike(str(post.key().id()))
+        countUnlikes = Unlike.countLike(str(post.key().id()))
+
+        comment_get = Comment.com(str(post.key().id()))
+
+        if self.user and (post.user_id == str(self.user.key().id())):
+                post.delete()
+                time.sleep(0.1)
+                self.redirect('/blog')
+        else:
+                return self.redirect('/%s' % post.key().id())
+   
+
+class editLatest(Base):
+    def get(self, id):
+        key = db.Key.from_path('Post', int(id))
+        post = db.get(key)
+        if not post:
+            return self.redirect('/login')
+        countLikes = Like.countLike(str(post.key().id()))
+        countUnlikes = Unlike.countLike(str(post.key().id()))
+        comment_get = db.GqlQuery(
+            "select * from Comment where pid = '%s'" % str(post.key().id()))
+        if not self.user:
+            return self.redirect('/login')
+        key = db.Key.from_path('Post', int(id))
+        post = db.get(key)
+        if not post:
+            return self.redirect('/login')
+        countLikes = Like.countLike(str(post.key().id()))
+        countUnlikes = Unlike.countLike(str(post.key().id()))
+
+        comment_get = Comment.com(str(post.key().id()))
+        if not self.user:
+                self.redirect('/login')
+        if self.user and post.user_id == str(self.user.key().id()):
+                self.redirect('/edit/%s' % post.key().id())
+        else:
+                return self.redirect('/%s' % post.key().id())
+
+
+class likeLatest(Base):
+    def get(self, id):
+        key = db.Key.from_path('Post', int(id))
+        post = db.get(key)
+        if not post:
+            return self.redirect('/login')
+        countLikes = Like.countLike(str(post.key().id()))
+        countUnlikes = Unlike.countLike(str(post.key().id()))
+        comment_get = db.GqlQuery(
+            "select * from Comment where pid = '%s'" % str(post.key().id()))
+        if not self.user:
+            return self.redirect('/login')
+        key = db.Key.from_path('Post', int(id))
+        post = db.get(key)
+        if not post:
+            return self.redirect('/login')
+        countLikes = Like.countLike(str(post.key().id()))
+        countUnlikes = Unlike.countLike(str(post.key().id()))
+
+        comment_get = Comment.com(str(post.key().id()))
+        if not self.user:
+                self.redirect("/login")
+
+        elif post.user_id == str(self.user.key().id()):
+                return self.redirect('/%s' % post.key().id())
+
+        else:
+                if Like.count(
+                    str(post.key().id()),
+                    str(
+                        self.user.key().id())) >= 1:
+
+                    return self.redirect('/%s' % post.key().id())
+                else:
+                    obj = Like(
+                        pid=str(post.key().id()),
+                        uid=str(
+                            self.user.key().id()))
+                    obj.put()
+                    time.sleep(0.1)
+                    self.redirect("/%s" % post.key().id())
+        
+
+class unlikeLatest(Base):
+    def get(self, id):
+        key = db.Key.from_path('Post', int(id))
+        post = db.get(key)
+        if not post:
+            return self.redirect('/login')
+        countLikes = Like.countLike(str(post.key().id()))
+        countUnlikes = Unlike.countLike(str(post.key().id()))
+        comment_get = db.GqlQuery(
+            "select * from Comment where pid = '%s'" % str(post.key().id()))
+        if not self.user:
+            return self.redirect('/login')
+        key = db.Key.from_path('Post', int(id))
+        post = db.get(key)
+        if not post:
+            return self.redirect('/login')
+        countLikes = Like.countLike(str(post.key().id()))
+        countUnlikes = Unlike.countLike(str(post.key().id()))
+
+        comment_get = Comment.com(str(post.key().id()))
+        if not self.user:
+                self.redirect("/login")
+
+        elif post.user_id == str(self.user.key().id()):
+                return self.redirect('/%s' % post.key().id())
+        else:
+                if Unlike.count(
+                    str(post.key().id()),
+                    str(
+                        self.user.key().id())) == 1:
+
+                    return self.redirect('/%s' % post.key().id())
+                else:
+                    obj = Unlike(
+                        pid=str(post.key().id()),
+                        uid=str(
+                            self.user.key().id()))
+                    obj.put()
+                    time.sleep(0.1)
+                    self.redirect("/%s" % post.key().id())
+        
+
 class latest(Base):
     def get(self, id):
         key = db.Key.from_path('Post', int(id))
@@ -340,102 +483,16 @@ class latest(Base):
 
         comment_get = Comment.com(str(post.key().id()))
         if self.request.get("delete"):
-            if self.user and (post.user_id == str(self.user.key().id())):
-                post.delete()
-                time.sleep(0.1)
-                self.redirect('/blog')
-            else:
-                self.render(
-                    'singlepost.html',
-                    post=post,
-                    error="You cant edit this post",
-                    countLikes=countLikes,
-                    countUnlikes=countUnlikes,
-                    comment_get=comment_get)
-
+            return self.redirect('/delLatest/%s' % post.key().id())
+            
         if(self.request.get('edit')):
-            if not self.user:
-                self.redirect('/login')
-            if self.user and post.user_id == str(self.user.key().id()):
-                self.redirect('/edit/%s' % post.key().id())
-            else:
-                self.render(
-                    "singlepost.html",
-                    post=post,
-                    error="You cant Edit this Post!!",
-                    countLikes=countLikes,
-                    countUnlikes=countUnlikes,
-                    comment_get=comment_get)
+            return self.redirect('/editLatest/%s' % post.key().id())
 
         if (self.request.get('like')):
-            if not self.user:
-                self.redirect("/login")
-
-            elif post.user_id == str(self.user.key().id()):
-                self.render(
-                    "singlepost.html",
-                    post=post,
-                    error="Cant like your own post!",
-                    countLikes=countLikes,
-                    countUnlikes=countUnlikes,
-                    comment_get=comment_get)
-
-            else:
-                if Like.count(
-                    str(post.key().id()),
-                    str(
-                        self.user.key().id())) >= 1:
-
-                    self.render(
-                        "singlepost.html",
-                        post=post,
-                        error="Cant like your this post again!",
-                        countLikes=countLikes,
-                        countUnlikes=countUnlikes,
-                        comment_get=comment_get)
-                else:
-                    obj = Like(
-                        pid=str(post.key().id()),
-                        uid=str(
-                            self.user.key().id()))
-                    obj.put()
-                    time.sleep(0.1)
-                    self.redirect("/%s" % post.key().id())
+            return self.redirect('/likeLatest/%s' % post.key().id())
 
         if (self.request.get('unlike')):
-            if not self.user:
-                self.redirect("/login")
-
-            elif post.user_id == str(self.user.key().id()):
-                self.render(
-                    "singlepost.html",
-                    post=post,
-                    error="Cant unlike your own post!",
-                    countLikes=countLikes,
-                    countUnlikes=countUnlikes,
-                    comment_get=comment_get)
-
-            else:
-                if Unlike.count(
-                    str(post.key().id()),
-                    str(
-                        self.user.key().id())) == 1:
-
-                    self.render(
-                        "singlepost.html",
-                        post=post,
-                        error="Cant unlike your this post again!",
-                        countLikes=countLikes,
-                        countUnlikes=countUnlikes,
-                        comment_get=comment_get)
-                else:
-                    obj = Unlike(
-                        pid=str(post.key().id()),
-                        uid=str(
-                            self.user.key().id()))
-                    obj.put()
-                    time.sleep(0.1)
-                    self.redirect("/%s" % post.key().id())
+            return self.redirect('/unlikeLatest/%s' % post.key().id())
 
         if (self.request.get('comment')):
             if not self.user:
@@ -611,6 +668,11 @@ app = webapp2.WSGIApplication([
     ('/edit/([0-9]+)', Edit),
     ('/deletec/([0-9]+)', Delete_comment),
     ('/editc/([0-9]+)', Edit_comment),
-    ('/logoutsucc', Logoutsucc)
+    ('/logoutsucc', Logoutsucc),
+    ('/delLatest/([0-9]+)', delLatest),
+    ('/editLatest/([0-9]+)', editLatest),
+    ('/likeLatest/([0-9]+)', likeLatest),
+    ('/unlikeLatest/([0-9]+)', unlikeLatest)
+
 
 ], debug=True)
